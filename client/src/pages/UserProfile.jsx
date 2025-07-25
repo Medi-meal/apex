@@ -21,7 +21,7 @@ export default function UserProfile() {
           }, 5000); // 5 second timeout
 
           // Fetch user history
-          const historyPromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-input/history?email=${encodeURIComponent(user.email)}`)
+          const historyPromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-input/history?email=${encodeURIComponent(user.email)})
             .then(res => {
               setHistory(res.data.history || []);
             })
@@ -31,7 +31,7 @@ export default function UserProfile() {
             });
 
           // Fetch user stats from database
-          const statsPromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-stats?email=${encodeURIComponent(user.email)}`)
+          const statsPromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-stats?email=${encodeURIComponent(user.email)})
             .then(res => {
               setStats(res.data.stats || {});
             })
@@ -41,7 +41,7 @@ export default function UserProfile() {
             });
 
           // Fetch user profile
-          const profilePromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-profile?email=${encodeURIComponent(user.email)}`)
+          const profilePromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-profile?email=${encodeURIComponent(user.email)})
             .then(res => {
               setUserProfile(res.data.profile);
             })
@@ -94,7 +94,7 @@ export default function UserProfile() {
     if (stats.totalSubmissions !== undefined) {
       return {
         totalRecommendations: stats.totalSubmissions || 0,
-        recentActivity: stats.recentActivity || 0,
+        streak: stats.streak || 0,
         avgRecommendationsPerWeek: stats.avgRecommendationsPerWeek || 0,
         memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently',
         avgCalories: stats.avgCalories || 0,
@@ -108,18 +108,28 @@ export default function UserProfile() {
 
     // Fallback to calculating from history if database stats not available
     const totalRecommendations = history.length;
-    const recentActivity = history.filter(entry => {
-      const entryDate = new Date(entry.createdAt);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return entryDate >= weekAgo;
-    }).length;
+    // Calculate streak from history (number of consecutive days with activity)
+    let streak = 0;
+    if (history.length > 0) {
+      let prevDate = new Date(history[0].createdAt);
+      streak = 1;
+      for (let i = 1; i < history.length; i++) {
+        const currDate = new Date(history[i].createdAt);
+        const diffDays = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          streak++;
+          prevDate = currDate;
+        } else if (diffDays > 1) {
+          break;
+        }
+      }
+    }
 
     const avgRecommendationsPerWeek = totalRecommendations > 0 ? Math.round(totalRecommendations / Math.max(1, Math.ceil((Date.now() - new Date(history[history.length - 1]?.createdAt || Date.now()).getTime()) / (7 * 24 * 60 * 60 * 1000)))) : 0;
 
     return {
       totalRecommendations,
-      recentActivity,
+      streak,
       avgRecommendationsPerWeek,
       memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently'
     };
@@ -131,8 +141,8 @@ export default function UserProfile() {
     <div className="card" style={{
       padding: 'var(--space-6)',
       textAlign: 'center',
-      border: `2px solid ${color}15`,
-      backgroundColor: `${color}05`
+      border: 2px solid ${color}15,
+      backgroundColor: ${color}05
     }}>
       <div style={{
         fontSize: '2rem',
@@ -322,8 +332,8 @@ export default function UserProfile() {
             <StatCard
               icon="🔥"
               title="Recent Activity"
-              value={dashboardData.recentActivity}
-              subtitle="Last 7 days"
+              value={dashboardData.streak}
+              subtitle="Your streak"
               color="var(--warning-600)"
             />
             <StatCard
@@ -414,7 +424,7 @@ export default function UserProfile() {
                       justifyContent: 'center',
                       fontSize: '1.25rem'
                     }}>
-                      🍽️
+                      🍽
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{
@@ -560,7 +570,7 @@ export default function UserProfile() {
                       e.target.style.borderColor = 'var(--success-200)';
                     }}
                   >
-                    <span style={{ fontSize: '1.25rem' }}>⚕️</span>
+                    <span style={{ fontSize: '1.25rem' }}>⚕</span>
                     <div>
                       <div style={{ fontWeight: '600' }}>Update Health Profile</div>
                       <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Keep your information current</div>
@@ -629,7 +639,7 @@ export default function UserProfile() {
                             justifyContent: 'center',
                             fontSize: '1.25rem'
                           }}>
-                            🍽️
+                            🍽
                           </div>
                           <div>
                             <div style={{
