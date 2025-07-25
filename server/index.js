@@ -93,18 +93,34 @@ app.post('/api/auth/login', async (req, res) => {
     // Streak logic
     let userProfile = await UserProfile.findOne({ email });
     const now = new Date();
-    const noonToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
     let streak = 0;
     if (userProfile) {
       streak = userProfile.streak || 0;
       let lastStreakDate = userProfile.lastStreakDate;
-      if (!lastStreakDate || (now > noonToday && (!sameDay(now, lastStreakDate) || lastStreakDate < noonToday))) {
-        // Only increment if after 12:00 PM and it's a new day
+      const last = lastStreakDate ? new Date(lastStreakDate) : null;
+
+      // Get today's and yesterday's date at midnight
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      if (!last) {
+        // No previous streak, start at 1
+        streak = 1;
+      } else if (sameDay(last, today)) {
+        // Already counted today, do nothing
+        // streak remains the same
+      } else if (sameDay(last, yesterday)) {
+        // Last streak was yesterday, increment
         streak += 1;
-        userProfile.streak = streak;
-        userProfile.lastStreakDate = now;
-        await userProfile.save();
+      } else {
+        // Missed a day, reset streak
+        streak = 1;
       }
+
+      userProfile.streak = streak;
+      userProfile.lastStreakDate = now;
+      await userProfile.save();
     } else {
       // Create profile if not exists
       userProfile = new UserProfile({ email, streak: 1, lastStreakDate: now });
@@ -125,44 +141,6 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
-  }
-});
-
-
-// Google Auth Route - FIXED
-app.post('/api/auth/google', async (req, res) => {
-  const { credential } = req.body;
-  if (!credential) return res.status(400).json({ message: 'No credential provided' });
-  
-  const client = new OAuth2Client(GOOGLE_CLIENT_ID);
-  try {
-    const ticket = await client.verifyIdToken({ 
-      idToken: credential, 
-      audience: GOOGLE_CLIENT_ID 
-    });
-    const payload = ticket.getPayload();
-    const { email, name } = payload;
-    
-    if (!email) return res.status(400).json({ message: 'No email in Google account' });
-    
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({ name: name || '', email, password: '' });
-      await user.save();
-    }
-    
-    // Return user data for frontend
-    res.json({ 
-      message: 'Google login successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email
-      }
-    });
-  } catch (err) {
-    console.error('Google login error:', err);
-    res.status(401).json({ message: 'Invalid Google token' });
   }
 });
 
@@ -276,7 +254,7 @@ app.post('/api/gemini-flash-test', async (req, res) => {
 app.post('/api/gemini-food-check', async (req, res) => {
   const { disease, medication, food } = req.body;
   if (!food) return res.status(400).json({ warning: 'No food provided.' });
-  const prompt = `Given the user has ${disease || 'no specific disease'} and is taking ${medication || 'no medication'}, is ${food} safe to eat? Respond with a short warning if not safe, or say it is safe.`;
+  const prompt = Given the user has ${disease || 'no specific disease'} and is taking ${medication || 'no medication'}, is ${food} safe to eat? Respond with a short warning if not safe, or say it is safe.;
   try {
     const geminiRes = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
@@ -303,11 +281,11 @@ function recommendationsToText(recommendations) {
     ['breakfast', 'lunch', 'dinner'].forEach(meal => {
       const mealData = recommendations[meal];
       if (mealData) {
-        result += `${meal.charAt(0).toUpperCase() + meal.slice(1)}:\n`;
+        result += ${meal.charAt(0).toUpperCase() + meal.slice(1)}:\n;
         
         if (mealData.recommended && mealData.recommended.length) {
           const recItems = mealData.recommended.map(item => 
-            typeof item === 'object' ? `${item.food} - ${item.quantity}` : item
+            typeof item === 'object' ? ${item.food} - ${item.quantity} : item
           );
           result += `  Recommended: ${recItems.join(', ')}\n`;
         }
@@ -321,10 +299,10 @@ function recommendationsToText(recommendations) {
   } else {
     // Fallback for old format
     const rec = recommendations.recommended && recommendations.recommended.length
-      ? `Recommended: ${recommendations.recommended.join(', ')}`
+      ? Recommended: ${recommendations.recommended.join(', ')}
       : '';
     const notRec = recommendations.not_recommended && recommendations.not_recommended.length
-      ? `Not Recommended: ${recommendations.not_recommended.join(', ')}`
+      ? Not Recommended: ${recommendations.not_recommended.join(', ')}
       : '';
     result = [rec, notRec].filter(Boolean).join('\n');
   }
@@ -468,4 +446,4 @@ app.get('/api/user-stats', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(Server running on port ${PORT}));
