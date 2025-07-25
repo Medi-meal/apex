@@ -75,7 +75,6 @@ app.post('/api/auth/signup', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -139,7 +138,6 @@ app.post('/api/auth/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -192,7 +190,6 @@ app.post('/api/gemini-recommend', async (req, res) => {
       );
 
       const text = geminiRes.data.candidates[0].content.parts[0].text;
-      console.log('Gemini raw response:', text); // Debug log
       let result;
       try {
         result = JSON.parse(text);
@@ -254,7 +251,7 @@ app.post('/api/gemini-flash-test', async (req, res) => {
 app.post('/api/gemini-food-check', async (req, res) => {
   const { disease, medication, food } = req.body;
   if (!food) return res.status(400).json({ warning: 'No food provided.' });
-  const prompt = Given the user has ${disease || 'no specific disease'} and is taking ${medication || 'no medication'}, is ${food} safe to eat? Respond with a short warning if not safe, or say it is safe.;
+  const prompt = `Given the user has ${disease || 'no specific disease'} and is taking ${medication || 'no medication'}, is ${food} safe to eat? Respond with a short warning if not safe, or say it is safe.`;
   try {
     const geminiRes = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
@@ -281,11 +278,11 @@ function recommendationsToText(recommendations) {
     ['breakfast', 'lunch', 'dinner'].forEach(meal => {
       const mealData = recommendations[meal];
       if (mealData) {
-        result += ${meal.charAt(0).toUpperCase() + meal.slice(1)}:\n;
+        result += `${meal.charAt(0).toUpperCase() + meal.slice(1)}:\n`;
         
         if (mealData.recommended && mealData.recommended.length) {
           const recItems = mealData.recommended.map(item => 
-            typeof item === 'object' ? ${item.food} - ${item.quantity} : item
+            typeof item === 'object' ? `${item.food} - ${item.quantity}` : item
           );
           result += `  Recommended: ${recItems.join(', ')}\n`;
         }
@@ -299,10 +296,10 @@ function recommendationsToText(recommendations) {
   } else {
     // Fallback for old format
     const rec = recommendations.recommended && recommendations.recommended.length
-      ? Recommended: ${recommendations.recommended.join(', ')}
+      ? `Recommended: ${recommendations.recommended.join(', ')}`
       : '';
     const notRec = recommendations.not_recommended && recommendations.not_recommended.length
-      ? Not Recommended: ${recommendations.not_recommended.join(', ')}
+      ? `Not Recommended: ${recommendations.not_recommended.join(', ')}`
       : '';
     result = [rec, notRec].filter(Boolean).join('\n');
   }
@@ -350,25 +347,20 @@ app.get('/api/user-input', async (req, res) => {
 
 // Save/Update user profile data
 app.post('/api/user-profile', async (req, res) => {
-  console.log('POST /api/user-profile called');
-  console.log('Request body:', req.body);
   
   const { email, profileData } = req.body;
   if (!email) {
-    console.log('Error: No email provided');
     return res.status(400).json({ message: 'Email required' });
   }
   
   try {
     const existingProfile = await UserProfile.findOne({ email });
-    console.log('Existing profile found:', !!existingProfile);
     
     if (existingProfile) {
       // Update existing profile
       existingProfile.profileData = profileData;
       existingProfile.updatedAt = new Date();
       await existingProfile.save();
-      console.log('Profile updated successfully');
       res.json({ message: 'Profile updated successfully', profile: existingProfile });
     } else {
       // Create new profile
@@ -378,12 +370,10 @@ app.post('/api/user-profile', async (req, res) => {
         createdAt: new Date(),
         updatedAt: new Date()
       });
-      console.log('New profile created successfully');
       res.json({ message: 'Profile created successfully', profile: newProfile });
     }
   } catch (err) {
-    console.error('Error saving profile:', err);
-    res.status(500).json({ message: 'Error saving profile', error: err.message });
+    res.status(500).json({ message: 'Error saving profile' });
   }
 });
 
@@ -400,7 +390,6 @@ app.get('/api/user-profile', async (req, res) => {
       res.json({ profile: null, streak: 0 });
     }
   } catch (err) {
-    console.error('Error fetching profile:', err);
     res.status(500).json({ message: 'Error fetching profile' });
   }
 });
@@ -440,10 +429,9 @@ app.get('/api/user-stats', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Error fetching user stats:', err);
     res.status(500).json({ message: 'Error fetching user stats' });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(Server running on port ${PORT}));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
