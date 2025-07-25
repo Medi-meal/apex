@@ -1,11 +1,34 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
+const testimonials = [
+  {
+    name: "Sarah Johnson",
+    role: "Diabetes Patient",
+    content: "Medimeal helped me understand which foods work best with my medication. My blood sugar is more stable than ever!",
+    avatar: "SJ"
+  },
+  {
+    name: "Michael Chen",
+    role: "Heart Patient",
+    content: "The personalized meal plans are incredible. I've lost 20 pounds and feel amazing while staying safe with my heart medication.",
+    avatar: "MC"
+  },
+  {
+    name: "Dr. Emily Rodriguez",
+    role: "Nutritionist",
+    content: "I recommend Medimeal to all my patients. The science-backed approach to nutrition and medication interaction is outstanding.",
+    avatar: "ER"
+  }
+];
+
 const Landing = ({ showAbout, setShowAbout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openFaq, setOpenFaq] = useState(null);
   const aboutRef = useRef(null);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [fade, setFade] = useState(true);
 
   useEffect(() => {
     if (location.state?.showAbout) {
@@ -18,6 +41,17 @@ const Landing = ({ showAbout, setShowAbout }) => {
       aboutRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [showAbout]);
+
+  // Animate fade-in on testimonial change
+  useEffect(() => {
+    setFade(false);
+    const timeout = setTimeout(() => setFade(true), 50);
+    return () => clearTimeout(timeout);
+  }, [testimonialIndex]);
+
+  // Carousel navigation
+  const nextTestimonial = () => setTestimonialIndex((testimonialIndex + 1) % testimonials.length);
+  const prevTestimonial = () => setTestimonialIndex((testimonialIndex - 1 + testimonials.length) % testimonials.length);
 
   const features = [
     {
@@ -80,18 +114,28 @@ const Landing = ({ showAbout, setShowAbout }) => {
   ];
 
   return (
-    <div className="landing-page" style={{ minHeight: '100vh', backgroundColor: 'var(--secondary-50)' }}>
+    <div className="landing-page" style={{ minHeight: '100vh', backgroundColor: 'var(--secondary-50)', scrollBehavior: 'smooth' }}>
       {/* Hero Section */}
       <section className="hero-section" style={{
         background: 'linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%)',
         color: 'white',
         padding: 'var(--space-24) 0',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: 'relative', // Add for absolute bubbles
+        overflow: 'hidden',
       }}>
+        {/* Animated Water Balloons (Bubbles) */}
+        <div className="bubble" style={{ top: 40, left: 80, width: 120, height: 120 }} />
+        <div className="bubble" style={{ top: 120, right: 100, width: 80, height: 80 }} />
+        <div className="bubble" style={{ bottom: 60, left: 180, width: 90, height: 90 }} />
+        <div className="bubble" style={{ bottom: 30, right: 60, width: 140, height: 140 }} />
+        <div className="bubble" style={{ top: 60, left: 320, width: 70, height: 70 }} />
+        <div className="bubble" style={{ bottom: 120, right: 220, width: 100, height: 100 }} />
+        <div className="bubble" style={{ top: 180, right: 320, width: 60, height: 60 }} />
         <div className="container">
           <div className="fade-in">
             <h1 style={{
-              fontSize: '3.5rem',
+              fontSize: '4.5rem',
               fontWeight: '700',
               marginBottom: 'var(--space-6)',
               letterSpacing: '-0.02em'
@@ -99,22 +143,26 @@ const Landing = ({ showAbout, setShowAbout }) => {
               Medimeal
             </h1>
             <p style={{
-              fontSize: '1.5rem',
+              fontSize: '2.1rem',
               marginBottom: 'var(--space-8)',
-              color: 'rgba(255, 255, 255, 0.9)',
-              maxWidth: '600px',
-              margin: '0 auto var(--space-8) auto'
+              color: 'rgba(255, 255, 255, 0.93)',
+              maxWidth: '700px',
+              margin: '0 auto var(--space-8) auto',
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
             }}>
               Your Health, Your Meal – Powered by AI
             </p>
             <p style={{
-              fontSize: '1.125rem',
+              fontSize: '1.35rem',
               marginBottom: 'var(--space-10)',
-              color: 'rgba(255, 255, 255, 0.8)',
-              maxWidth: '700px',
-              margin: '0 auto var(--space-10) auto'
+              color: 'rgba(255, 255, 255, 0.88)',
+              maxWidth: '800px',
+              margin: '0 auto var(--space-10) auto',
+              fontWeight: 500,
+              lineHeight: 1.5,
             }}>
-              Discover a new way to eat healthy, delicious meals tailored to your unique health needs. 
+              Discover a new way to eat healthy, delicious meals tailored to your unique health needs. <br />
               Let Medimeal's AI guide you to a happier, healthier you!
             </p>
             <button 
@@ -137,40 +185,26 @@ const Landing = ({ showAbout, setShowAbout }) => {
       </section>
 
       {/* Features Section */}
-      <section style={{ padding: 'var(--space-24) 0', backgroundColor: 'white' }}>
+      <section id="features" style={{ padding: 'var(--space-24) 0', backgroundColor: 'white' }}>
         <div className="container">
           <div className="text-center slide-up" style={{ marginBottom: 'var(--space-16)' }}>
-            <h2 style={{ fontSize: '2.5rem', color: 'var(--secondary-900)', marginBottom: 'var(--space-4)' }}>
+            <h2 style={{ fontSize: '2.7rem', color: 'var(--secondary-900)', marginBottom: 'var(--space-4)', fontWeight: 800, letterSpacing: '-1px' }}>
               Why Choose Medimeal?
             </h2>
-            <p style={{ fontSize: '1.125rem', color: 'var(--secondary-600)', maxWidth: '600px', margin: '0 auto' }}>
+            <p style={{ fontSize: '1.5rem', color: 'var(--secondary-600)', maxWidth: '700px', margin: '0 auto', fontWeight: 500 }}>
               Personalized nutrition recommendations powered by cutting-edge AI technology
             </p>
           </div>
-          
-          <div className="grid grid-cols-4" style={{ gap: 'var(--space-8)' }}>
+          <div className="grid grid-cols-4" style={{ gap: 72 }}>
             {features.map((feature, index) => (
-              <div key={index} className="card" style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-                <div style={{
-                  fontSize: '3rem',
-                  marginBottom: 'var(--space-4)',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}>
+              <div key={index} className="card" style={{ textAlign: 'center', padding: '2rem 1.2rem', minHeight: 260, minWidth: 260, maxWidth: 260, borderRadius: 24, boxShadow: '0 4px 32px #0001', fontSize: '1.15rem', margin: '0 12px 48px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontSize: '3rem', marginBottom: 18, display: 'flex', justifyContent: 'center' }}>
                   {feature.icon}
                 </div>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  color: 'var(--secondary-900)', 
-                  marginBottom: 'var(--space-3)' 
-                }}>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--secondary-900)', marginBottom: 12, fontWeight: 700 }}>
                   {feature.title}
                 </h3>
-                <p style={{ 
-                  color: 'var(--secondary-600)', 
-                  fontSize: '0.875rem',
-                  lineHeight: '1.6' 
-                }}>
+                <p style={{ color: 'var(--secondary-600)', fontSize: '1rem', lineHeight: '1.5', fontWeight: 500 }}>
                   {feature.description}
                 </p>
               </div>
@@ -180,7 +214,7 @@ const Landing = ({ showAbout, setShowAbout }) => {
       </section>
 
       {/* How It Works Section */}
-      <section style={{ padding: 'var(--space-24) 0', backgroundColor: 'var(--secondary-50)' }}>
+      <section id="how-it-works" style={{ padding: 'var(--space-24) 0', backgroundColor: 'var(--secondary-50)' }}>
         <div className="container">
           <div className="text-center" style={{ marginBottom: 'var(--space-16)' }}>
             <h2 style={{ fontSize: '2.5rem', color: 'var(--secondary-900)', marginBottom: 'var(--space-4)' }}>
@@ -230,6 +264,71 @@ const Landing = ({ showAbout, setShowAbout }) => {
         </div>
       </section>
 
+      {/* Interactive Testimonial Feature Section */}
+      <section id="reviews" className="container-fluid py-5" style={{ background: '#4ec28a', borderRadius: 24, margin: '48px 0' }}>
+        <div className="text-center mb-5">
+          <h2 className="fw-bold mb-2" style={{ fontSize: '2.5rem', color: 'white' }}>What Our Users Say</h2>
+          <p className="mb-0" style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.95)' }}>
+            Join thousands of satisfied users who have transformed their health with Medimeal
+          </p>
+        </div>
+        <div className="row justify-content-center" style={{ minHeight: 420 }}>
+          {testimonials.map((t, idx) => (
+            <div key={idx} className="col-md-4 d-flex justify-content-center align-items-center mb-4 mb-md-0">
+              <div className="card shadow-lg p-4" style={{ borderRadius: 32, minHeight: 480, maxWidth: 400, width: '100%', background: 'rgba(255,255,255,0.97)' }}>
+                <div className="d-flex justify-content-center mb-4">
+                  <img
+                    src={idx === 0 ? 'https://randomuser.me/api/portraits/women/65.jpg' : idx === 1 ? 'https://randomuser.me/api/portraits/men/44.jpg' : 'https://randomuser.me/api/portraits/women/44.jpg'}
+                    alt={t.name}
+                    style={{
+                      width: 180,
+                      height: 180,
+                      objectFit: 'cover',
+                      borderRadius: '50%',
+                      border: '8px solid #fff',
+                      boxShadow: '0 4px 32px #0003',
+                      background: '#fff',
+                    }}
+                  />
+                </div>
+                <h2 className="fw-bold text-center mb-3" style={{ fontSize: '1.5rem', color: '#222' }}>What Our Users Say</h2>
+                <p className="text-center text-muted mb-3" style={{ fontSize: '1.1rem' }}>Join thousands of satisfied users who have transformed their health with Medimeal</p>
+                <div className="mb-4" style={{ fontSize: '1.15rem', fontWeight: 500, color: '#222', lineHeight: 1.5, textAlign: 'center' }}>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 700, display: 'block', marginBottom: 12 }}>
+                    “{t.content}”
+                  </span>
+                  <div className="mb-2" style={{ textAlign: 'center' }}>
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} style={{ color: '#FFD600', fontSize: 28, marginRight: 2 }}>★</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="d-flex align-items-center justify-content-center mt-2">
+                  <div className="d-flex align-items-center justify-content-center bg-primary text-white rounded-circle me-3" style={{ width: 56, height: 56, fontWeight: 700, fontSize: 24, boxShadow: '0 2px 12px #0002' }}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <div className="fw-bold" style={{ fontSize: '1.1rem', color: '#0d6efd' }}>{t.name}</div>
+                    <div className="text-muted" style={{ fontSize: '1rem' }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      <style>{`
+      .testimonial-fade {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1);
+      }
+      .testimonial-fade.in {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      `}</style>
+
       {/* CTA Section */}
       <section style={{
         padding: 'var(--space-24) 0',
@@ -238,23 +337,23 @@ const Landing = ({ showAbout, setShowAbout }) => {
         textAlign: 'center'
       }}>
         <div className="container">
-          <h2 style={{ 
-            fontSize: '2.5rem', 
+          <h2 style={{
+            fontSize: '2.5rem',
             marginBottom: 'var(--space-6)',
             fontWeight: '700'
           }}>
             Ready to Transform Your Health?
           </h2>
-          <p style={{ 
-            fontSize: '1.25rem', 
+          <p style={{
+            fontSize: '1.25rem',
             marginBottom: 'var(--space-8)',
             color: 'rgba(255, 255, 255, 0.9)',
             maxWidth: '600px',
             margin: '0 auto var(--space-8) auto'
           }}>
-            Join thousands of users who have improved their health with personalized meal recommendations.
+            Join thousands of users who have improved their health with personalized meal recommendations. Start your journey to better health today!
           </p>
-          <button 
+          <button
             className="btn btn-lg"
             style={{
               backgroundColor: 'white',
@@ -334,9 +433,109 @@ const Landing = ({ showAbout, setShowAbout }) => {
           </div>
         </section>
       )}
+
+      {/* Food Variety Section (like screenshot) */}
+      <section className="container py-5" style={{ marginTop: 48, marginBottom: 48 }}>
+        <div className="row align-items-center justify-content-center">
+          {/* Left: Single Fruit Bowl Image */}
+          <div className="col-md-6 d-flex justify-content-center align-items-center" style={{ minHeight: 400 }}>
+            <img
+              src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80"
+              alt="Salad"
+              style={{
+                width: 400,
+                height: 400,
+                objectFit: 'cover',
+                borderRadius: 32,
+                boxShadow: '0 4px 24px #0001',
+                background: '#fff',
+              }}
+            />
+          </div>
+          {/* Right: Heading and Description */}
+          <div className="col-md-6 ps-md-5 mt-5 mt-md-0">
+            <h2 className="fw-bold mb-3" style={{ fontSize: '2.5rem', color: '#29536b', lineHeight: 1.1 }}>A Variety of Tasty Nutritious Choices</h2>
+            <p className="mb-0" style={{ fontSize: '1.25rem', color: '#444', fontWeight: 500 }}>
+              MediMeal weight loss drinks, snacks, shakes, and meal replacements<br />
+              are packed with ingredients that will help support your appetite and taste great.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Modern Footer */}
+      <footer className="bg-dark text-white pt-5 pb-3 mt-5">
+        <div className="container">
+          <div className="row mb-4">
+            <div className="col-md-4 mb-3 mb-md-0">
+              <div className="h4 fw-bold mb-2">Medimeal</div>
+              <p className="text-white-50 mb-2">Transforming health through AI-powered personalized nutrition. Your journey to better health starts here.</p>
+            </div>
+            <div className="col-md-2">
+              <h6 className="fw-bold mb-2">Product</h6>
+              <ul className="list-unstyled">
+                <li><a href="#features" className="text-white-50 text-decoration-none">Features</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none">Pricing</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none">API</a></li>
+              </ul>
+            </div>
+            <div className="col-md-2">
+              <h6 className="fw-bold mb-2">Support</h6>
+              <ul className="list-unstyled">
+                <li><a href="#" className="text-white-50 text-decoration-none">Help Center</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none">Contact Us</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none">Community</a></li>
+              </ul>
+            </div>
+            <div className="col-md-2">
+              <h6 className="fw-bold mb-2">Legal</h6>
+              <ul className="list-unstyled">
+                <li><a href="#" className="text-white-50 text-decoration-none">Privacy Policy</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none">Terms of Service</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="text-center text-white-50 border-top pt-3">
+            &copy; 2024 Medimeal. All rights reserved.
+          </div>
+        </div>
+      </footer>
+      {/* Add bubble animation styles */}
+      <style>{`
+        .testimonial-fade {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.6s cubic-bezier(.4,0,.2,1), transform 0.6s cubic-bezier(.4,0,.2,1);
+        }
+        .testimonial-fade.in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .bubble {
+          position: absolute;
+          background: radial-gradient(circle at 60% 40%, #6ec1e4 70%, #2986cc 100%);
+          opacity: 0.22;
+          border-radius: 50%;
+          z-index: 1;
+          animation: bubbleFloat 8s ease-in-out infinite;
+        }
+        .bubble:nth-child(1) { animation-delay: 0s; }
+        .bubble:nth-child(2) { animation-delay: 2s; }
+        .bubble:nth-child(3) { animation-delay: 4s; }
+        .bubble:nth-child(4) { animation-delay: 6s; }
+        .bubble:nth-child(5) { animation-delay: 1.5s; }
+        .bubble:nth-child(6) { animation-delay: 3.5s; }
+        .bubble:nth-child(7) { animation-delay: 5.5s; }
+        @keyframes bubbleFloat {
+          0% { transform: translateY(0) scale(1); opacity: 0.22; }
+          50% { transform: translateY(-40px) scale(1.08); opacity: 0.32; }
+          100% { transform: translateY(0) scale(1); opacity: 0.22; }
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Landing;
+
 
