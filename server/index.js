@@ -128,6 +128,44 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+
+// Google Auth Route - FIXED
+app.post('/api/auth/google', async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ message: 'No credential provided' });
+  
+  const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+  try {
+    const ticket = await client.verifyIdToken({ 
+      idToken: credential, 
+      audience: GOOGLE_CLIENT_ID 
+    });
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+    
+    if (!email) return res.status(400).json({ message: 'No email in Google account' });
+    
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({ name: name || '', email, password: '' });
+      await user.save();
+    }
+    
+    // Return user data for frontend
+    res.json({ 
+      message: 'Google login successful',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (err) {
+    console.error('Google login error:', err);
+    res.status(401).json({ message: 'Invalid Google token' });
+  }
+});
+
 function sameDay(d1, d2) {
   return d1.getFullYear() === d2.getFullYear() &&
          d1.getMonth() === d2.getMonth() &&
