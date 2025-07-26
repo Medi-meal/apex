@@ -1401,14 +1401,20 @@ export default function GeminiRecommend() {
                   if (foodQuery.trim()) {
                     setFoodCheckLoading(true);
                     try {
-                      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/gemini-recommend`, {
-                        foodQuery: foodQuery.trim(),
-                        userProfile: form
+                      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/gemini-food-check`, {
+                        disease: form.diseaseFood?.diseaseDuration || '',
+                        medication: form.medication?.map(med => med.drugName).join(', ') || '',
+                        food: foodQuery.trim(),
+                        age: form.age || '',
+                        gender: form.gender || '',
+                        bmi: form.bmi || '',
+                        foodType: form.foodType || ''
                       });
-                      if (response.data.safety) {
+                      const warning = response.data.warning;
+                      if (warning.trim().toUpperCase() === 'SAFE') {
                         setFoodWarning(`✅ ${foodQuery} is safe to eat!`);
                       } else {
-                        setFoodWarning(`⚠️ ${foodQuery} may not be safe for your condition.`);
+                        setFoodWarning(`${foodQuery} may not be safe for your condition.`);
                       }
                     } catch (error) {
                       setFoodWarning('❌ Error checking food safety. Please try again.');
@@ -1657,5 +1663,8 @@ function FoodItem({ food, icon, type }) {
     </li>
   );
 }
+
+
+
 
 
