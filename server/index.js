@@ -6,7 +6,7 @@ require('dotenv').config();
 const { Configuration, OpenAIApi } = require('openai');
 const axios = require('axios');
 const { OAuth2Client } = require('google-auth-library');
-const GOOGLE_CLIENT_ID = '772559724147-utfpmphmr81s84n2eao0fnl7likdp79r.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
 const User = require('../server/models/User');
 const UserInput = require('../server/models/UserInput');
