@@ -15,7 +15,7 @@ const Navbar = ({ user, onLogout }) => {
   const navItems = user ? [
     { path: '/recommendations', label: 'Recommendations', icon: '🤖' },
     { path: '/profile', label: 'Profile', icon: '👤' },
-    { path: '/profile-wizard', label: 'Health Profile', icon: '⚕️' }
+    { path: '/feedback', label: 'Feedback', icon: '💬' }
   ] : [
     { path: '/login', label: 'Login', icon: '🔑' },
     { path: '/signup', label: 'Sign Up', icon: '✨' }
@@ -305,4 +305,6 @@ const Navbar = ({ user, onLogout }) => {
 };
 
 export default Navbar;
+
+
 
