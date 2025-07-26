@@ -1401,65 +1401,15 @@ export default function GeminiRecommend() {
                   if (foodQuery.trim()) {
                     setFoodCheckLoading(true);
                     try {
-                      // Get user's disease and medication info for food safety check
-                      const disease = form.diseaseFood?.diseaseDuration || '';
-                      const medication = form.medication?.map(med => med.drugName).filter(Boolean).join(', ') || '';
-                      
-                      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/gemini-food-check`, {
-                        disease: disease,
-                        medication: medication,
-                        food: foodQuery.trim()
+                      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/gemini-recommend`, {
+                        foodQuery: foodQuery.trim(),
+                        userProfile: form
                       });
-                      
-                      const warning = response.data.warning;
-                      
-                      // Check if the food is in current recommendations
-                      let inRecommendations = false;
-                      let inNotRecommended = false;
-                      
-                      if (result) {
-                        ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-                          if (result[meal]) {
-                            // Check recommended foods
-                            if (result[meal].recommended) {
-                              result[meal].recommended.forEach(item => {
-                                const foodName = typeof item === 'object' ? item.food : item;
-                                if (foodName.toLowerCase().includes(foodQuery.trim().toLowerCase())) {
-                                  inRecommendations = true;
-                                }
-                              });
-                            }
-                            // Check not recommended foods
-                            if (result[meal].not_recommended) {
-                              result[meal].not_recommended.forEach(food => {
-                                if (food.toLowerCase().includes(foodQuery.trim().toLowerCase())) {
-                                  inNotRecommended = true;
-                                }
-                              });
-                            }
-                          }
-                        });
-                      }
-                      
-                      // Determine if food is safe based on AI response
-                      const isSafe = !warning.toLowerCase().includes('not safe') && 
-                                   !warning.toLowerCase().includes('avoid') && 
-                                   !warning.toLowerCase().includes('unsafe') &&
-                                   !warning.toLowerCase().includes('warning');
-                      
-                      if (isSafe) {
+                      if (response.data.safety) {
                         setFoodWarning(`✅ ${foodQuery} is safe to eat!`);
                       } else {
                         setFoodWarning(`⚠️ ${foodQuery} may not be safe for your condition.`);
                       }
-                      
-                      // Add consistency note if there's a contradiction
-                      if (isSafe && inNotRecommended) {
-                        setFoodWarning(prev => prev + ' (Note: This conflicts with current recommendations)');
-                      } else if (!isSafe && inRecommendations) {
-                        setFoodWarning(prev => prev + ' (Note: This conflicts with current recommendations)');
-                      }
-                      
                     } catch (error) {
                       setFoodWarning('❌ Error checking food safety. Please try again.');
                     }
