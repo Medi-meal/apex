@@ -6,9 +6,10 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import UserProfile from './pages/UserProfile';
-import ProfileWizard from './pages/ProfileWizard';
+
 import GeminiRecommend from './pages/GeminiRecommend';
 import ErrorBoundary from './components/ErrorBoundary';
+import Feedback from './pages/Feedback';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -66,18 +67,14 @@ function App() {
                   user ? <UserProfile /> : <Navigate to="/login" />
                 } 
               />
-              <Route 
-                path="/profile-wizard" 
-                element={
-                  user ? <ProfileWizard /> : <Navigate to="/login" />
-                } 
-              />
+
               <Route 
                 path="/recommendations" 
                 element={
                   user ? <GeminiRecommend /> : <Navigate to="/login" />
                 } 
               />
+              <Route path="/feedback" element={<Feedback />} />
             </Routes>
           </div>
         </ErrorBoundary>
@@ -87,4 +84,6 @@ function App() {
 }
 
 export default App;
+
+
 
