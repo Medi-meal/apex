@@ -1,239 +1,252 @@
-# Medimeal - AI-Powered Personalized Nutrition Platform
+# 🍽️ Medimeal - AI-Powered Personalized Meal Recommendations
 
-🍽️ **Smart meal recommendations tailored to your health, medications, and dietary preferences**
+A comprehensive web application that provides personalized meal recommendations based on your health profile, medications, and dietary preferences. Built with React, Node.js, and powered by Google's Gemini AI.
 
-## 🌟 Features
+## ✨ Features
 
-### ✅ Current Features
-- **AI-Powered Meal Recommendations** - Personalized meal plans based on health conditions and medications
-- **Medication Safety Checks** - Drug-food interaction warnings and safe food suggestions
-- **Multi-step Profile Wizard** - Comprehensive health profile creation
-- **User Authentication** - Secure login with Google OAuth integration
-- **Recommendation History** - Track and review past meal plans
-- **Interactive Dashboard** - Overview of health metrics and quick actions
-- **Real-time Food Analysis** - Check individual foods for safety and interactions
+### 🎯 Core Functionality
+- **AI-Powered Meal Recommendations**: Get personalized breakfast, lunch, and dinner suggestions
+- **Health Profile Management**: Store and manage your health information, medications, and dietary restrictions
+- **Food Safety Check**: Verify if specific foods are safe for your condition
+- **Email Notifications**: Receive daily meal recommendations via email
+- **User Authentication**: Secure signup and login with Google OAuth support
 
-### 🚀 New Enhanced Features
-- **📊 Dashboard Analytics** - Visual stats showing health streaks, meals tracked, and recommendations
-- **🍽️ Meal Tracker** - Daily meal logging with completion tracking
-- **🔍 Food Safety Analyzer** - Real-time analysis of individual foods for safety
-- **📈 Enhanced History View** - Better visualization of recommendation timeline
-- **🎯 Quick Actions** - Fast access to key features from dashboard
-- **📱 Responsive Design** - Mobile-first design with modern UI components
-- **⚡ Loading States** - Smooth loading animations and error handling
-- **🔔 Notification System** - User-friendly alerts and confirmations
+### 🏥 Health-Focused Features
+- **Medication Integration**: Recommendations consider your current medications
+- **Disease-Specific Guidance**: Tailored advice based on your health conditions
+- **BMI Calculation**: Automatic BMI calculation and health categorization
+- **Dietary Restrictions**: Support for religious, cultural, and personal food preferences
+- **Allergy Awareness**: Avoid foods that may cause allergic reactions
+
+### 📊 User Experience
+- **Interactive Dashboard**: Beautiful, responsive UI with modern design
+- **Meal Tracking**: Mark foods as eaten or avoided
+- **Favorites System**: Save your preferred meal recommendations
+- **Progress Tracking**: Monitor your dietary journey with streaks and statistics
+- **Mobile Responsive**: Works seamlessly on all devices
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 19** - Modern React with hooks and functional components
-- **React Router Dom** - Client-side routing
+- **React 19** - Modern UI framework
+- **Vite** - Fast build tool and development server
+- **React Router** - Client-side routing
 - **Axios** - HTTP client for API calls
-- **Vite** - Fast development server and build tool
-- **CSS3** - Custom styling with modern CSS features
+- **Google OAuth** - Authentication integration
 
 ### Backend
 - **Node.js** - Server runtime
 - **Express.js** - Web framework
-- **MongoDB** - Database for user data and recommendations
+- **MongoDB** - NoSQL database
 - **Mongoose** - MongoDB object modeling
-- **Google Gemini AI** - AI-powered meal recommendations
-- **Google OAuth** - Authentication system
-- **bcrypt** - Password hashing
+- **bcryptjs** - Password hashing
+- **Nodemailer** - Email functionality
 
-## 🚀 Getting Started
+### AI & External Services
+- **Google Gemini AI** - Meal recommendations and food safety checks
+- **Google OAuth 2.0** - User authentication
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- MongoDB database
-- Google OAuth credentials
-- Google Gemini API key
+- MongoDB (local or cloud instance)
+- Google Cloud Platform account (for Gemini AI and OAuth)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/medimeal.git
-   cd medimeal
+   git clone <repository-url>
+   cd apex
    ```
 
-2. **Install server dependencies**
+2. **Install dependencies**
    ```bash
+   # Install server dependencies
    cd server
    npm install
-   ```
 
-3. **Install client dependencies**
-   ```bash
+   # Install client dependencies
    cd ../client
    npm install
    ```
 
-4. **Environment Setup**
-   
-   Create `.env` file in the server directory:
+3. **Environment Setup**
+
+   **Server Environment** (`server/.env`):
    ```env
-   MONGO_URI=your_mongodb_connection_string
+   MONGO_URI=mongodb://localhost:27017/medimeal
    GEMINI_API_KEY=your_gemini_api_key
    GOOGLE_CLIENT_ID=your_google_oauth_client_id
-   GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+   EMAIL_USER=your_gmail@gmail.com
+   EMAIL_PASS=your_gmail_app_password
+   PORT=5000
    ```
 
-5. **Start the development servers**
-   
-   Terminal 1 (Backend):
-   ```bash
-   cd server
-   node index.js
+   **Client Environment** (`client/.env`):
+   ```env
+   VITE_BACKEND_URL=http://localhost:5000
+   VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
    ```
-   
-   Terminal 2 (Frontend):
+
+4. **Start the application**
    ```bash
-   cd client
+   # Start the backend server (from server directory)
+   npm start
+
+   # Start the frontend (from client directory)
    npm run dev
    ```
 
-6. **Access the application**
+5. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
 
-## 📁 Project Structure
-
-```
-medimeal/
-├── client/                 # React frontend
-│   ├── public/            # Static assets
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   │   ├── DashboardStats.jsx
-│   │   │   ├── MealTracker.jsx
-│   │   │   ├── FoodAnalyzer.jsx
-│   │   │   ├── EnhancedFeatures.jsx
-│   │   │   ├── UIComponents.jsx
-│   │   │   ├── NotificationSystem.jsx
-│   │   │   └── Navbar.jsx
-│   │   ├── pages/         # Page components
-│   │   │   ├── Landing.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Signup.jsx
-│   │   │   ├── GeminiRecommend.jsx
-│   │   │   ├── ProfileWizard.jsx
-│   │   │   ├── UserProfile.jsx
-│   │   │   └── ErrorBoundary.jsx
-│   │   ├── assets/        # Images and static files
-│   │   └── App.jsx        # Main App component
-│   └── package.json
-└── server/                # Node.js backend
-    ├── models/           # Database models
-    │   ├── User.js
-    │   └── UserInput.js
-    ├── index.js          # Main server file
-    └── package.json
-```
-
-## 🎯 Key Components
-
-### Dashboard Components
-- **DashboardStats** - Visual metrics and statistics
-- **MealTracker** - Daily meal logging interface
-- **FoodAnalyzer** - Individual food safety analysis
-
-### UI Components
-- **LoadingSpinner** - Animated loading states
-- **ErrorMessage** - User-friendly error displays
-- **SkeletonCard** - Loading placeholders
-- **EmptyState** - Empty data state handling
-
-### Utility Components
-- **NotificationSystem** - Toast notifications
-- **EnhancedFeatures** - Landing page feature showcase
-
-## 🔄 API Endpoints
+## 📋 API Endpoints
 
 ### Authentication
-- `POST /api/signup` - User registration
-- `POST /api/login` - User login
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/google` - Google OAuth authentication
+
+### User Management
+- `GET /api/user-profile` - Get user profile
+- `POST /api/user-profile` - Update user profile
+- `GET /api/user-stats` - Get user statistics
 
 ### Meal Recommendations
-- `POST /api/gemini-recommend` - Get AI meal recommendations
-- `POST /api/food-analysis` - Analyze individual food safety
+- `POST /api/gemini-recommend` - Generate meal recommendations
+- `POST /api/gemini-food-check` - Check food safety
+- `POST /api/send-meal-email` - Send email notifications
 
-### User Data
-- `GET /api/user-input/history` - Get user recommendation history
-- `POST /api/user-input` - Save user health profile
+### Data Management
+- `POST /api/user-input` - Save user input and recommendations
+- `GET /api/user-input` - Get user input history
+- `GET /api/user-input/history` - Get complete input history
 
-## 🎨 Styling Guidelines
+## 🏗️ Project Structure
 
-- **Colors**: Green primary (#22c55e), with blue, orange, and red accents
-- **Typography**: System fonts with clear hierarchy
-- **Spacing**: Consistent rem-based spacing
-- **Components**: Card-based layouts with rounded corners
-- **Interactions**: Smooth hover effects and transitions
+```
+apex/
+├── client/                 # Frontend React application
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/         # Page components
+│   │   ├── styles/        # CSS files
+│   │   ├── App.jsx        # Main app component
+│   │   └── main.jsx       # App entry point
+│   ├── public/            # Static assets
+│   └── package.json       # Frontend dependencies
+├── server/                # Backend Node.js application
+│   ├── models/           # MongoDB schemas
+│   ├── index.js          # Main server file
+│   └── package.json      # Backend dependencies
+└── README.md             # This file
+```
 
-## 🔐 Security Features
+## 🔧 Configuration
 
-- Password hashing with bcrypt
-- Google OAuth integration
-- Input validation and sanitization
-- Error boundaries for graceful error handling
-- Secure API endpoints
+### Google Gemini AI Setup
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Add it to your server `.env` file
 
-## 📊 Health Data Handling
+### Google OAuth Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URIs
+6. Add client ID to both server and client `.env` files
 
-- Comprehensive health profile collection
-- Medication interaction database
-- BMI calculation and health metrics
-- Dietary preference management
-- Recommendation history tracking
+### Email Configuration
+1. Enable 2-factor authentication on your Gmail account
+2. Generate an App Password
+3. Add email credentials to server `.env` file
 
-## 🚀 Future Enhancements
+## 🎨 Key Features Explained
 
-### Planned Features
-- **Wearable Integration** - Sync with fitness trackers
-- **Social Features** - Share meal plans with family/friends
-- **Healthcare Provider Portal** - Professional dashboard
-- **Voice Commands** - Voice-activated meal logging
-- **Photo Recognition** - Scan food photos for analysis
-- **Grocery Integration** - Generate shopping lists
-- **Meal Prep Planning** - Weekly meal prep suggestions
+### AI Meal Recommendations
+The application uses Google's Gemini AI to generate personalized meal recommendations based on:
+- User's age, gender, and BMI
+- Current medications and health conditions
+- Dietary preferences and restrictions
+- Food allergies and intolerances
 
-### Technical Improvements
-- **Real-time Updates** - WebSocket integration
-- **Offline Support** - Progressive Web App features
-- **Performance Optimization** - Code splitting and lazy loading
-- **Testing Suite** - Unit and integration tests
-- **CI/CD Pipeline** - Automated deployment
+### Food Safety Check
+Users can check if specific foods are safe for their condition by:
+- Entering the food name
+- Getting instant AI-powered safety assessment
+- Receiving warnings for potential food-drug interactions
+
+### Email Notifications
+- Beautiful HTML email templates
+- Daily meal recommendations
+- Personalized with user's name
+- Includes both recommended and not-recommended foods
+
+## 🔒 Security Features
+
+- **Password Hashing**: All passwords are hashed using bcrypt
+- **JWT Tokens**: Secure session management
+- **CORS Protection**: Cross-origin request security
+- **Input Validation**: Server-side data validation
+- **Environment Variables**: Sensitive data protection
+
+## 📱 User Interface
+
+The application features a modern, responsive design with:
+- **Gradient backgrounds** and smooth animations
+- **Interactive elements** with hover effects
+- **Mobile-first** responsive design
+- **Accessibility features** for better user experience
+- **Intuitive navigation** with clear visual hierarchy
+
+## 🚀 Deployment
+
+### Frontend Deployment (Vercel/Netlify)
+1. Build the project: `npm run build`
+2. Deploy the `dist` folder
+3. Set environment variables in deployment platform
+
+### Backend Deployment (Heroku/Railway)
+1. Set up MongoDB Atlas for database
+2. Configure environment variables
+3. Deploy the server directory
+4. Update frontend API URL
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## 🆘 Support
 
-- Google Gemini AI for intelligent meal recommendations
-- Unsplash for beautiful food photography
-- React community for excellent documentation
-- MongoDB for reliable data storage
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the documentation
+
+## 🔮 Future Enhancements
+
+- [ ] Push notifications
+- [ ] Meal planning calendar
+- [ ] Recipe suggestions
+- [ ] Nutritional information
+- [ ] Social features
+- [ ] Mobile app version
+- [ ] Integration with fitness trackers
+- [ ] Voice commands
+- [ ] Barcode scanning for food items
 
 ---
 
-**Made with ❤️ for better health through technology**+ Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Made with ❤️ for better health and nutrition**
