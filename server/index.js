@@ -286,9 +286,23 @@ app.post('/api/gemini-flash-test', async (req, res) => {
 });
 
 app.post('/api/gemini-food-check', async (req, res) => {
-  const { disease, medication, food } = req.body;
+  const { disease, medication, food, age, gender, bmi, foodType } = req.body;
   if (!food) return res.status(400).json({ warning: 'No food provided.' });
-  const prompt = `Given the user has ${disease || 'no specific disease'} and is taking ${medication || 'no medication'}, is ${food} safe to eat? Respond with a short warning if not safe, or say it is safe.`;
+  const prompt = `Given the following user details:
+    - Age: ${age || 'not provided'}
+    - Gender: ${gender || 'not provided'}
+    - BMI: ${bmi || 'not provided'}
+    - Medication: ${medication || 'no medication'}
+    - Disease: ${disease || 'no specific disease'}
+    - Food preference: ${foodType || 'not specified'}
+    
+    Is ${food} safe and healthy for this person to eat? Consider:
+    - Food-drug interactions
+    - Disease-specific dietary restrictions
+    - General health guidelines
+    - Nutritional value vs potential harm
+    
+    Respond with either "SAFE" if the food is safe, or a brief warning message if it's not safe. Keep the response short and clear.`;
   try {
     const geminiRes = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
