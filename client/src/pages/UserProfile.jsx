@@ -95,7 +95,7 @@ export default function UserProfile() {
     if (stats.totalSubmissions !== undefined) {
       return {
         totalRecommendations: stats.totalSubmissions || 0,
-        recentActivity: stats.recentActivity || 0,
+        streak: stats.streak || 0,
         avgRecommendationsPerWeek: stats.avgRecommendationsPerWeek || 0,
         memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently',
         avgCalories: stats.avgCalories || 0,
@@ -109,18 +109,28 @@ export default function UserProfile() {
 
     // Fallback to calculating from history if database stats not available
     const totalRecommendations = history.length;
-    const recentActivity = history.filter(entry => {
-      const entryDate = new Date(entry.createdAt);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return entryDate >= weekAgo;
-    }).length;
+    // Calculate streak from history (number of consecutive days with activity)
+    let streak = 0;
+    if (history.length > 0) {
+      let prevDate = new Date(history[0].createdAt);
+      streak = 1;
+      for (let i = 1; i < history.length; i++) {
+        const currDate = new Date(history[i].createdAt);
+        const diffDays = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          streak++;
+          prevDate = currDate;
+        } else if (diffDays > 1) {
+          break;
+        }
+      }
+    }
 
     const avgRecommendationsPerWeek = totalRecommendations > 0 ? Math.round(totalRecommendations / Math.max(1, Math.ceil((Date.now() - new Date(history[history.length - 1]?.createdAt || Date.now()).getTime()) / (7 * 24 * 60 * 60 * 1000)))) : 0;
 
     return {
       totalRecommendations,
-      recentActivity,
+      streak,
       avgRecommendationsPerWeek,
       memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently'
     };
@@ -331,7 +341,7 @@ export default function UserProfile() {
             <StatCard
               icon="🔥"
               title="Streak"
-              value={stats?.streak || 0}
+              value={dashboardData.streak}
               subtitle="Consecutive days active"
               color="var(--warning-600)"
             />
@@ -366,13 +376,6 @@ export default function UserProfile() {
             label="Overview"
             icon="📋"
             isActive={activeTab === 'overview'}
-            onClick={handleTabClick}
-          />
-          <TabButton
-            id="history"
-            label="Recommendation History"
-            icon="📚"
-            isActive={activeTab === 'history'}
             onClick={handleTabClick}
           />
           <TabButton
@@ -576,173 +579,6 @@ export default function UserProfile() {
           </div>
         )}
 
-        {activeTab === 'history' && (
-          <div className="card fade-in">
-            <div className="card-header">
-              <h3 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: 'var(--secondary-900)',
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-2)'
-              }}>
-                <span>📚</span>
-                Your Recommendation History
-              </h3>
-            </div>
-            <div className="card-body">
-              {history?.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  color: 'var(--secondary-500)',
-                  padding: 'var(--space-12)'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>📋</div>
-                  <h4 style={{ color: 'var(--secondary-700)', marginBottom: 'var(--space-2)' }}>No history found</h4>
-                  <p style={{ margin: 0 }}>Start by getting your first AI-powered meal recommendation!</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  {history?.map((entry, idx) => (
-                    <div key={entry._id || idx} style={{
-                      backgroundColor: 'var(--secondary-50)',
-                      borderRadius: 'var(--radius-xl)',
-                      padding: 'var(--space-6)',
-                      border: '1px solid var(--secondary-200)'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 'var(--space-4)'
-                      }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'var(--space-3)'
-                        }}>
-                          <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--primary-100)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '1.25rem'
-                          }}>
-                            🍽️
-                          </div>
-                          <div>
-                            <div style={{
-                              fontSize: '1rem',
-                              fontWeight: '600',
-                              color: 'var(--secondary-900)'
-                            }}>
-                              Meal Recommendation #{history.length - idx}
-                            </div>
-                            <div style={{
-                              fontSize: '0.875rem',
-                              color: 'var(--secondary-500)'
-                            }}>
-                              {new Date(entry.createdAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: 'var(--space-6)'
-                      }}>
-                        <div>
-                          <h4 style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            color: 'var(--secondary-700)',
-                            marginBottom: 'var(--space-2)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
-                          }}>
-                            Your Input
-                          </h4>
-                          <div style={{
-                            backgroundColor: 'white',
-                            padding: 'var(--space-4)',
-                            borderRadius: 'var(--radius-lg)',
-                            border: '1px solid var(--secondary-200)',
-                            fontSize: '0.875rem',
-                            color: 'var(--secondary-700)'
-                          }}>
-                            {renderInput(entry.input)}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            color: 'var(--secondary-700)',
-                            marginBottom: 'var(--space-2)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
-                          }}>
-                            AI Recommendations
-                          </h4>
-                          <div style={{
-                            backgroundColor: 'white',
-                            padding: 'var(--space-4)',
-                            borderRadius: 'var(--radius-lg)',
-                            border: '1px solid var(--secondary-200)'
-                          }}>
-                            {/* Show recommended foods with star if in favoriteFoods */}
-                            {(() => {
-                              let recs = entry.recommendations;
-                              let favs = recs && recs.favoriteFoods ? recs.favoriteFoods : {};
-                              // If recommendations are in object format with meals
-                              if (recs && typeof recs === 'object' && (recs.breakfast || recs.lunch || recs.dinner)) {
-                                return Object.entries(recs).filter(([k]) => ['breakfast','lunch','dinner'].includes(k)).map(([meal, mealData]) => (
-                                  <div key={meal} style={{ marginBottom: 10 }}>
-                                    <div style={{ fontWeight: 700, color: '#0a2342', marginBottom: 4 }}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</div>
-                                    <ul style={{ paddingLeft: 18, margin: 0 }}>
-                                      {mealData.recommended && mealData.recommended.map((item, idx) => {
-                                        const foodName = typeof item === 'string' ? item : item.food;
-                                        const key = `${meal.charAt(0).toUpperCase() + meal.slice(1)}:${foodName}`;
-                                        const isFav = !!favs[key];
-                                        return (
-                                          <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                                            {isFav && <span style={{ color: '#FFD700', fontSize: '1.1rem' }}>★</span>}
-                                            <span>{foodName}</span>
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                  </div>
-                                ));
-                              }
-                              // Fallback: show JSON
-                              return <pre style={{ fontSize: '0.75rem', color: 'var(--secondary-600)', margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: '1.5' }}>{recs ? JSON.stringify(recs, null, 2) : 'N/A'}</pre>;
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {activeTab === 'health' && (
           <div className="grid grid-cols-2" style={{ gap: 'var(--space-6)' }}>
             {/* Health Metrics */}
@@ -934,6 +770,8 @@ export default function UserProfile() {
     </div>
   );
 }
+
+
 
 
 
