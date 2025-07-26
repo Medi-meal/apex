@@ -21,7 +21,7 @@ export default function UserProfile() {
           }, 5000); // 5 second timeout
 
           // Fetch user history
-          const historyPromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-input/history?email=${encodeURIComponent(user.email)})
+          const historyPromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-input/history?email=${encodeURIComponent(user.email)}`)
             .then(res => {
               setHistory(res.data.history || []);
             })
@@ -31,7 +31,7 @@ export default function UserProfile() {
             });
 
           // Fetch user stats from database
-          const statsPromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-stats?email=${encodeURIComponent(user.email)})
+          const statsPromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-stats?email=${encodeURIComponent(user.email)}`)
             .then(res => {
               setStats(res.data.stats || {});
             })
@@ -41,9 +41,11 @@ export default function UserProfile() {
             });
 
           // Fetch user profile
-          const profilePromise = axios.get(${import.meta.env.VITE_BACKEND_URL}/api/user-profile?email=${encodeURIComponent(user.email)})
+          const profilePromise = axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-profile?email=${encodeURIComponent(user.email)}`)
             .then(res => {
-              setUserProfile(res.data.profile);
+              if (res.data && res.data.profile) {
+                setUserProfile(res.data.profile); // set to flat object
+              }
             })
             .catch(err => {
               console.error('Error fetching profile:', err);
@@ -52,7 +54,6 @@ export default function UserProfile() {
 
           // Wait for all requests or timeout
           await Promise.allSettled([historyPromise, statsPromise, profilePromise]);
-          
           clearTimeout(timeoutId);
           setLoading(false);
         } catch (error) {
@@ -63,9 +64,9 @@ export default function UserProfile() {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function renderInput(input) {
     if (Array.isArray(input)) {
@@ -94,7 +95,7 @@ export default function UserProfile() {
     if (stats.totalSubmissions !== undefined) {
       return {
         totalRecommendations: stats.totalSubmissions || 0,
-        streak: stats.streak || 0,
+        recentActivity: stats.recentActivity || 0,
         avgRecommendationsPerWeek: stats.avgRecommendationsPerWeek || 0,
         memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently',
         avgCalories: stats.avgCalories || 0,
@@ -108,28 +109,18 @@ export default function UserProfile() {
 
     // Fallback to calculating from history if database stats not available
     const totalRecommendations = history.length;
-    // Calculate streak from history (number of consecutive days with activity)
-    let streak = 0;
-    if (history.length > 0) {
-      let prevDate = new Date(history[0].createdAt);
-      streak = 1;
-      for (let i = 1; i < history.length; i++) {
-        const currDate = new Date(history[i].createdAt);
-        const diffDays = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          streak++;
-          prevDate = currDate;
-        } else if (diffDays > 1) {
-          break;
-        }
-      }
-    }
+    const recentActivity = history.filter(entry => {
+      const entryDate = new Date(entry.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return entryDate >= weekAgo;
+    }).length;
 
     const avgRecommendationsPerWeek = totalRecommendations > 0 ? Math.round(totalRecommendations / Math.max(1, Math.ceil((Date.now() - new Date(history[history.length - 1]?.createdAt || Date.now()).getTime()) / (7 * 24 * 60 * 60 * 1000)))) : 0;
 
     return {
       totalRecommendations,
-      streak,
+      recentActivity,
       avgRecommendationsPerWeek,
       memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently'
     };
@@ -138,11 +129,11 @@ export default function UserProfile() {
   const dashboardData = getDashboardStats();
 
   const StatCard = ({ icon, title, value, subtitle, color = 'var(--primary-600)' }) => (
-    <div className="card" style={{
+    <div className="card fade-in" style={{
       padding: 'var(--space-6)',
       textAlign: 'center',
-      border: 2px solid ${color}15,
-      backgroundColor: ${color}05
+      border: `2px solid ${color}15`,
+      backgroundColor: `${color}05`
     }}>
       <div style={{
         fontSize: '2rem',
@@ -264,6 +255,14 @@ export default function UserProfile() {
     );
   }
 
+  // At the top of the return, show error message and Try Again button if error
+  // The error block is removed, so this section is no longer relevant.
+
+  // At the bottom of the profile page, add a feedback form
+  // Remove all feedback form state and handlers
+  // Remove the feedback form <div> at the bottom of the profile page
+  // If you want to keep the 'Give Feedback' button, leave it; otherwise, remove it as well.
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -331,9 +330,9 @@ export default function UserProfile() {
             />
             <StatCard
               icon="🔥"
-              title="Recent Activity"
-              value={dashboardData.streak}
-              subtitle="Your streak"
+              title="Streak"
+              value={stats?.streak || 0}
+              subtitle="Consecutive days active"
               color="var(--warning-600)"
             />
             <StatCard
@@ -349,6 +348,7 @@ export default function UserProfile() {
               value="85%"
               subtitle="Based on your activity"
               color="var(--primary-600)"
+              className="pulse"
             />
           </div>
         </div>
@@ -382,13 +382,34 @@ export default function UserProfile() {
             isActive={activeTab === 'health'}
             onClick={handleTabClick}
           />
+          <button
+            onClick={() => navigate('/feedback')}
+            style={{
+              background: 'linear-gradient(90deg, #2193b0 0%, #6dd5ed 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-lg)',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              padding: 'var(--space-3) var(--space-4)',
+              cursor: 'pointer',
+              marginLeft: 8,
+              boxShadow: '0 1px 4px #2193b022',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span role="img" aria-label="feedback">💬</span> Give Feedback
+          </button>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-2" style={{ gap: 'var(--space-6)' }}>
             {/* Recent Activity */}
-            <div className="card">
+            <div className="card fade-in">
               <div className="card-header">
                 <h3 style={{
                   fontSize: '1.25rem',
@@ -404,61 +425,68 @@ export default function UserProfile() {
                 </h3>
               </div>
               <div className="card-body">
-                {history.slice(0, 3).map((entry, idx) => (
-                  <div key={entry._id || idx} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    padding: 'var(--space-3)',
-                    backgroundColor: 'var(--secondary-50)',
-                    borderRadius: 'var(--radius-lg)',
-                    marginBottom: idx < 2 ? 'var(--space-3)' : 0
-                  }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      backgroundColor: 'var(--success-100)',
+                {(() => {
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  const recentEntries = history.filter(entry => new Date(entry.createdAt) >= weekAgo).slice(0, 3);
+                  if (recentEntries.length === 0) {
+                    return (
+                      <div style={{
+                        textAlign: 'center',
+                        color: 'var(--secondary-500)',
+                        fontSize: '0.875rem',
+                        padding: 'var(--space-8)'
+                      }}>
+                        No recent activity. Start by getting your first recommendation!
+                      </div>
+                    );
+                  }
+                  return recentEntries.map((entry, idx) => (
+                    <div key={entry._id || idx} style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.25rem'
+                      gap: 'var(--space-3)',
+                      padding: 'var(--space-3)',
+                      backgroundColor: 'var(--secondary-50)',
+                      borderRadius: 'var(--radius-lg)',
+                      marginBottom: idx < 2 ? 'var(--space-3)' : 0
                     }}>
-                      🍽
-                    </div>
-                    <div style={{ flex: 1 }}>
                       <div style={{
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        color: 'var(--secondary-900)',
-                        marginBottom: 'var(--space-1)'
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--success-100)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.25rem'
                       }}>
-                        Meal Recommendation
+                        🍽️
                       </div>
-                      <div style={{
-                        fontSize: '0.75rem',
-                        color: 'var(--secondary-500)'
-                      }}>
-                        {new Date(entry.createdAt).toLocaleDateString()}
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: 'var(--secondary-900)',
+                          marginBottom: 'var(--space-1)'
+                        }}>
+                          Meal Recommendation
+                        </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: 'var(--secondary-500)'
+                        }}>
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {history.length === 0 && (
-                  <div style={{
-                    textAlign: 'center',
-                    color: 'var(--secondary-500)',
-                    fontSize: '0.875rem',
-                    padding: 'var(--space-8)'
-                  }}>
-                    No recent activity. Start by getting your first recommendation!
-                  </div>
-                )}
+                  ));
+                })()}
               </div>
             </div>
 
             {/* Health Profile Card */}
-            <div className="card">
+            <div className="card fade-in">
               <div className="card-header">
                 <h3 style={{
                   fontSize: '1.25rem',
@@ -492,7 +520,7 @@ export default function UserProfile() {
             </div>
 
             {/* Quick Actions */}
-            <div className="card">
+            <div className="card fade-in">
               <div className="card-header">
                 <h3 style={{
                   fontSize: '1.25rem',
@@ -542,40 +570,6 @@ export default function UserProfile() {
                       <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Discover personalized meal suggestions</div>
                     </div>
                   </button>
-
-                  <button
-                    onClick={() => navigate('/profile-wizard')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--space-3)',
-                      padding: 'var(--space-4)',
-                      backgroundColor: 'var(--success-50)',
-                      border: '1px solid var(--success-200)',
-                      borderRadius: 'var(--radius-lg)',
-                      color: 'var(--success-700)',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      textAlign: 'left',
-                      width: '100%'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'var(--success-100)';
-                      e.target.style.borderColor = 'var(--success-300)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'var(--success-50)';
-                      e.target.style.borderColor = 'var(--success-200)';
-                    }}
-                  >
-                    <span style={{ fontSize: '1.25rem' }}>⚕</span>
-                    <div>
-                      <div style={{ fontWeight: '600' }}>Update Health Profile</div>
-                      <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Keep your information current</div>
-                    </div>
-                  </button>
                 </div>
               </div>
             </div>
@@ -583,7 +577,7 @@ export default function UserProfile() {
         )}
 
         {activeTab === 'history' && (
-          <div className="card">
+          <div className="card fade-in">
             <div className="card-header">
               <h3 style={{
                 fontSize: '1.25rem',
@@ -599,7 +593,7 @@ export default function UserProfile() {
               </h3>
             </div>
             <div className="card-body">
-              {history.length === 0 ? (
+              {history?.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
                   color: 'var(--secondary-500)',
@@ -611,7 +605,7 @@ export default function UserProfile() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  {history.map((entry, idx) => (
+                  {history?.map((entry, idx) => (
                     <div key={entry._id || idx} style={{
                       backgroundColor: 'var(--secondary-50)',
                       borderRadius: 'var(--radius-xl)',
@@ -639,7 +633,7 @@ export default function UserProfile() {
                             justifyContent: 'center',
                             fontSize: '1.25rem'
                           }}>
-                            🍽
+                            🍽️
                           </div>
                           <div>
                             <div style={{
@@ -710,16 +704,34 @@ export default function UserProfile() {
                             borderRadius: 'var(--radius-lg)',
                             border: '1px solid var(--secondary-200)'
                           }}>
-                            <pre style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--secondary-600)',
-                              margin: 0,
-                              whiteSpace: 'pre-wrap',
-                              fontFamily: 'inherit',
-                              lineHeight: '1.5'
-                            }}>
-                              {entry.recommendations ? JSON.stringify(entry.recommendations, null, 2) : 'N/A'}
-                            </pre>
+                            {/* Show recommended foods with star if in favoriteFoods */}
+                            {(() => {
+                              let recs = entry.recommendations;
+                              let favs = recs && recs.favoriteFoods ? recs.favoriteFoods : {};
+                              // If recommendations are in object format with meals
+                              if (recs && typeof recs === 'object' && (recs.breakfast || recs.lunch || recs.dinner)) {
+                                return Object.entries(recs).filter(([k]) => ['breakfast','lunch','dinner'].includes(k)).map(([meal, mealData]) => (
+                                  <div key={meal} style={{ marginBottom: 10 }}>
+                                    <div style={{ fontWeight: 700, color: '#0a2342', marginBottom: 4 }}>{meal.charAt(0).toUpperCase() + meal.slice(1)}</div>
+                                    <ul style={{ paddingLeft: 18, margin: 0 }}>
+                                      {mealData.recommended && mealData.recommended.map((item, idx) => {
+                                        const foodName = typeof item === 'string' ? item : item.food;
+                                        const key = `${meal.charAt(0).toUpperCase() + meal.slice(1)}:${foodName}`;
+                                        const isFav = !!favs[key];
+                                        return (
+                                          <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                            {isFav && <span style={{ color: '#FFD700', fontSize: '1.1rem' }}>★</span>}
+                                            <span>{foodName}</span>
+                                          </li>
+                                        );
+                                      })}
+                                    </ul>
+                                  </div>
+                                ));
+                              }
+                              // Fallback: show JSON
+                              return <pre style={{ fontSize: '0.75rem', color: 'var(--secondary-600)', margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', lineHeight: '1.5' }}>{recs ? JSON.stringify(recs, null, 2) : 'N/A'}</pre>;
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -734,7 +746,7 @@ export default function UserProfile() {
         {activeTab === 'health' && (
           <div className="grid grid-cols-2" style={{ gap: 'var(--space-6)' }}>
             {/* Health Metrics */}
-            <div className="card" style={{
+            <div className="card fade-in" style={{
               background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)',
               boxShadow: '0 4px 24px 0 rgba(0, 188, 212, 0.10)',
               border: 'none',
@@ -802,7 +814,7 @@ export default function UserProfile() {
                   }}>
                     <span style={{ color: '#388e3c', fontWeight: '600' }}>Streak</span>
                     <span style={{ color: '#388e3c', fontWeight: '700', fontSize: '1.125rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span role="img" aria-label="fire">🔥</span> {stats.streak || 0} days
+                      <span role="img" aria-label="fire">🔥</span> {stats?.streak || 0} days
                     </span>
                   </div>
                 </div>
@@ -810,7 +822,7 @@ export default function UserProfile() {
             </div>
 
             {/* Health Tips */}
-            <div className="card" style={{
+            <div className="card fade-in" style={{
               background: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)',
               boxShadow: '0 4px 24px 0 rgba(233, 30, 99, 0.10)',
               border: 'none',
@@ -866,13 +878,62 @@ export default function UserProfile() {
         )}
       </div>
 
+      {stats.streak !== undefined && stats.lastStreakDate && (
+        (() => {
+          const last = new Date(stats.lastStreakDate);
+          const now = new Date();
+          const isToday = last.getFullYear() === now.getFullYear() && last.getMonth() === now.getMonth() && last.getDate() === now.getDate();
+          return (
+            <div style={{
+              margin: '1.5rem 0',
+              padding: '1rem 1.5rem',
+              background: isToday ? '#e8f5e9' : '#fffde7',
+              color: isToday ? '#388e3c' : '#fbc02d',
+              borderRadius: 10,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              fontSize: '1.1rem',
+              boxShadow: '0 1px 4px #0a234211'
+            }}>
+              {isToday ? (
+                <>
+                  <span style={{fontSize: '1.3rem'}}>✅</span>
+                  You’ve continued your streak today!
+                </>
+              ) : (
+                <>
+                  <span style={{fontSize: '1.3rem'}}>⚠️</span>
+                  Don’t lose your streak! Get active today.
+                </>
+              )}
+            </div>
+          );
+        })()
+      )}
+
+      {/* Add global compatibility styles at the top of the file (or in a <style> block at the bottom) */}
       <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        html, body {
+          text-size-adjust: 100%;
+          -webkit-text-size-adjust: 100%;
+        }
+        .match-parent-align {
+          text-align: match-parent;
+          text-align: -webkit-match-parent;
+          text-align: inherit;
+        }
+        /* Use print-color-adjust for Chrome/Edge instead of color-adjust */
+        .print-color-adjust {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
         }
       `}</style>
+
     </div>
   );
 }
+
+
 
