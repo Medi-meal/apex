@@ -743,7 +743,7 @@ export default function GeminiRecommend() {
                           <option value="veg">veg</option>
                           <option value="nonveg">nonveg</option>
                           <option value="vegan">vegan</option>
-                          <option value="both">both</option>
+                         
                         </select>
                       </div>
                     </div>
