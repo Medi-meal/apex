@@ -30,6 +30,8 @@ const UserProfileSchema = new mongoose.Schema({
     foodRestrictions: String,
     bmi: Number
   },
+  streak: { type: Number, default: 0 },
+  lastStreakDate: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -88,13 +90,38 @@ app.post('/api/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Streak logic
+    let userProfile = await UserProfile.findOne({ email });
+    const now = new Date();
+    let streak = 0;
+    function sameDay(d1, d2) {
+      return d1 && d2 && d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
+    }
+    if (userProfile) {
+      streak = userProfile.streak || 0;
+      let lastStreakDate = userProfile.lastStreakDate;
+      if (!lastStreakDate || !sameDay(now, lastStreakDate)) {
+        streak += 1;
+        userProfile.streak = streak;
+        userProfile.lastStreakDate = now;
+        await userProfile.save();
+      }
+    } else {
+      userProfile = new UserProfile({ email, streak: 1, lastStreakDate: now });
+      await userProfile.save();
+      streak = 1;
+    }
+
     // Return user data for frontend
     res.json({ 
       message: 'Login successful',
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        streak
       }
     });
   } catch (err) {
@@ -291,9 +318,12 @@ app.post('/api/user-input', async (req, res) => {
     const newInput = await UserInput.create({ 
       email, 
       input, 
-      recommendations: recommendationsText 
+      recommendations // store the full object, not just text
     });
     console.log('UserInput created successfully:', newInput._id);
+
+    // Removed streak update logic: only save the recommendation
+
     res.json({ message: 'Saved', data: newInput });
   } catch (err) {
     console.error('Error saving user input:', err);
@@ -352,6 +382,8 @@ app.post('/api/user-profile', async (req, res) => {
       const newProfile = await UserProfile.create({
         email,
         profileData,
+        streak: 1,
+        lastStreakDate: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -404,6 +436,17 @@ app.get('/api/user-stats', async (req, res) => {
       Math.round(totalRecommendations / Math.max(1, Math.ceil((Date.now() - new Date(history[history.length - 1]?.createdAt || Date.now()).getTime()) / (7 * 24 * 60 * 60 * 1000)))) : 0;
 
     const memberSince = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently';
+    const streak = profile?.streak || 0;
+    let lastStreakDate = profile?.lastStreakDate || null;
+    // If streak is 0, set it to 1 and update lastStreakDate to today
+    if (profile && streak === 0) {
+      profile.streak = 1;
+      lastStreakDate = new Date();
+      profile.lastStreakDate = lastStreakDate;
+      await profile.save();
+    }
+    // Extract profile details if available
+    const profileData = profile?.profileData || {};
 
     res.json({
       stats: {
@@ -411,7 +454,10 @@ app.get('/api/user-stats', async (req, res) => {
         recentActivity,
         avgRecommendationsPerWeek,
         memberSince,
-        hasProfile: !!profile
+        hasProfile: !!profile,
+        streak: profile?.streak || 1,
+        lastStreakDate,
+        ...profileData // add all profile fields to stats
       }
     });
   } catch (err) {
@@ -422,3 +468,4 @@ app.get('/api/user-stats', async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
