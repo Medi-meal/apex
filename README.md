@@ -79,21 +79,16 @@ A comprehensive web application that provides personalized meal recommendations 
    MONGO_URI=mongodb://localhost:27017/medimeal
    GEMINI_API_KEY=your_gemini_api_key
    GOOGLE_CLIENT_ID=your_google_oauth_client_id
-   EMAIL_USER=your_gmail@gmail.com
-   EMAIL_PASS=your_gmail_app_password
+  
    PORT=5000
    ```
 
-   **Client Environment** (`client/.env`):
-   ```env
-   VITE_BACKEND_URL=http://localhost:5000
-   VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
-   ```
+  
 
 4. **Start the application**
    ```bash
    # Start the backend server (from server directory)
-   npm start
+   node index.js
 
    # Start the frontend (from client directory)
    npm run dev
